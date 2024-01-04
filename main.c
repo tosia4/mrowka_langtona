@@ -12,7 +12,6 @@
 #define PRAWO 0x25b7
 #define LEWO 0x25c1
 
-
 /*
  * zaczelam cos pisac, na razie wszystko w jednym pliku, najwyzej potem podzielimy
  *
@@ -199,7 +198,12 @@ void zwolnij_plansze(struct plansza* plansza){
 
 int main() {
     setlocale(LC_CTYPE, "");
-
+	
+	wprintf(L"%lc",0x1F41C);
+	wprintf(L"%lc",0x1F41C);
+	wprintf(L"%lc",0x1F41C);
+	wprintf(L"%lc",0x1F41C);
+	wprintf(L"%lc\n",0x1F41C);
 
     struct plansza* plansza = tworzenie_planszy(10,10);
     struct mrowka* mrowka = tworzenie_morowki(5, 5, GORA);
