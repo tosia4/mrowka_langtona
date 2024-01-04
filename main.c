@@ -1,14 +1,16 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <wchar.h>
+#include <locale.h>
 
-#define BIALY 1
-#define CZARNY 0
+#define BIALY 0x25af
+#define CZARNY 0x25ae
 
-#define GORA 0
-#define DOL 1
-#define PRAWO 2
-#define LEWO 3
+#define GORA 0x25b3
+#define DOL 0x25bd
+#define PRAWO 0x25b7
+#define LEWO 0x25c1
 
 
 /*
@@ -20,13 +22,13 @@
 struct plansza{
     int wiersze;
     int kolumny;
-    int **pola;
+    wchar_t **pola;
 };
 
 struct mrowka{
     int x;
     int y;
-    int kierunek;
+    wchar_t kierunek;
 };
 
 struct mrowka* tworzenie_morowki(int x, int y, int kierunek){
@@ -45,8 +47,6 @@ struct mrowka* tworzenie_morowki(int x, int y, int kierunek){
 }
 
 
-
-
 struct plansza* tworzenie_planszy(int wiersze, int kolumny){
     struct plansza* nowa_plansza = malloc(sizeof(struct plansza));
 
@@ -57,7 +57,7 @@ struct plansza* tworzenie_planszy(int wiersze, int kolumny){
     nowa_plansza->wiersze = wiersze;
     nowa_plansza->kolumny = kolumny;
 
-    int **pola = malloc(sizeof(int*) * wiersze);
+    int **pola = malloc(sizeof(wchar_t*) * wiersze);
 
     if (pola == NULL){
         free (nowa_plansza);
@@ -65,7 +65,7 @@ struct plansza* tworzenie_planszy(int wiersze, int kolumny){
     }
 
     for (int i =0; i < wiersze; i++){
-        *(pola + i) = calloc(sizeof(int) , kolumny);
+        *(pola + i) = calloc(sizeof(wchar_t) , kolumny);
 
         if(*(pola + i) == NULL){
 
@@ -81,24 +81,112 @@ struct plansza* tworzenie_planszy(int wiersze, int kolumny){
         }
 
     }
-
+	for (int i = 0; i < wiersze; ++i) {
+        	for (int j = 0; j < kolumny; ++j) {
+            	pola[i][j]=BIALY;
+        	}	
+    	}
     nowa_plansza->pola = pola;
 
     return nowa_plansza;
 
 }
 
-void wyswietl(struct plansza* plansza){
+void wyswietl(struct plansza* plansza, struct mrowka* mrowka){
 
-    for (int i = 0; i < plansza->wiersze; ++i) {
-        for (int j = 0; j < plansza->kolumny; ++j) {
-            printf("%d ", plansza->pola[i][j]);
+    for (int y = 0; y < plansza->wiersze; ++y) {
+        for (int x = 0; x < plansza->kolumny; ++x) {
+
+            if(x == mrowka->x && y == mrowka->y){
+                wprintf(L"%lc ", mrowka->kierunek);
+            }else{
+                wprintf(L"%lc ", plansza->pola[x][y]);
+            }
+
         }
-        printf("\n");
+        wprintf(L"%lc", '\n');
     }
 
+    wprintf(L"%lc", '\n');
+}
+
+
+wchar_t obrot_prawo(wchar_t kierunek){
+
+    if(kierunek == LEWO){
+        return GORA;
+    } else if(kierunek == GORA){
+        return PRAWO;
+    } else if (kierunek == PRAWO){
+        return DOL;
+    } else{
+        return LEWO;
+    }
+}
+
+
+wchar_t obrot_lewo(wchar_t kierunek){
+
+    if(kierunek == LEWO){
+        return DOL;
+    } else if(kierunek == GORA){
+        return LEWO;
+    } else if (kierunek == PRAWO){
+        return GORA;
+    } else{
+        return PRAWO;
+    }
+}
+
+int odwrocenie_koloru(int kolor){
+    if(kolor == BIALY){
+        return CZARNY;
+    }else{
+        return BIALY;
+    }
+}
+
+void przesuniecie_mrowki(struct mrowka* mrowka){
+    if(mrowka->kierunek == GORA){
+        mrowka->y--;
+    }else if (mrowka->kierunek == LEWO){
+        mrowka->x--;
+    }else if (mrowka->kierunek == DOL){
+        mrowka->y++;
+    }else{
+        mrowka->x++;
+    }
+}
+
+void poruszanie_biale(struct plansza* plansza, struct mrowka* mrowka){
+
+    mrowka->kierunek = obrot_prawo(mrowka->kierunek);
+
+    plansza->pola[mrowka->x][mrowka->y] = odwrocenie_koloru(plansza->pola[mrowka->x][mrowka->y]);
+
+    przesuniecie_mrowki(mrowka);
 
 }
+
+void poruszanie_czarne(struct plansza* plansza, struct mrowka* mrowka){
+
+    mrowka->kierunek = obrot_lewo(mrowka->kierunek);
+
+    plansza->pola[mrowka->x][mrowka->y] = odwrocenie_koloru(plansza->pola[mrowka->x][mrowka->y]);
+
+    przesuniecie_mrowki(mrowka);
+
+}
+
+void poruszanie(struct plansza* plansza, struct mrowka* mrowka){
+
+    if (plansza->pola[mrowka->x][mrowka->y] == BIALY){
+        poruszanie_biale(plansza,mrowka);
+    }else{
+        poruszanie_czarne(plansza,mrowka);
+    }
+}
+
 
 void zwolnij_plansze(struct plansza* plansza){
     for (int i = 0; i < plansza->wiersze; ++i) {
@@ -110,10 +198,19 @@ void zwolnij_plansze(struct plansza* plansza){
 
 
 int main() {
+    setlocale(LC_CTYPE, "");
 
-    struct plansza* plansza = tworzenie_planszy(10,20);
 
-    wyswietl(plansza);
+    struct plansza* plansza = tworzenie_planszy(10,10);
+    struct mrowka* mrowka = tworzenie_morowki(5, 5, GORA);
+
+    wyswietl(plansza, mrowka);
+    for (int i = 0; i < 3; ++i) {
+        poruszanie(plansza, mrowka);
+        wyswietl(plansza, mrowka);
+    }
+
 
     zwolnij_plansze(plansza);
+    return 0;
 }
