@@ -4,14 +4,20 @@
 #include <wchar.h>
 #include <locale.h>
 
-#define BIALY 0x25af
-#define CZARNY 0x25ae
+#define BIALY 0x25a1
+#define CZARNY 0x25a0
 
 #define GORA 0x25b3
 #define DOL 0x25bd
 #define PRAWO 0x25b7
 #define LEWO 0x25c1
 
+#define RAMKA_PIONOWA 0x2503
+#define RAMKA_POZIOMA 0x2501
+#define ROG_GORA_LEWO 0x250f
+#define ROG_GORA_PRAWO 0x2513
+#define ROG_DOL_LEWO 0x2517
+#define ROG_DOL_PRAWO 0x251b
 
 /*
  * zaczelam cos pisac, na razie wszystko w jednym pliku, najwyzej potem podzielimy
@@ -93,20 +99,35 @@ struct plansza* tworzenie_planszy(int wiersze, int kolumny){
 }
 
 void wyswietl(struct plansza* plansza, struct mrowka* mrowka){
+	
+	wprintf(L"%lc", ROG_GORA_LEWO);
+	for (int x = 0; x < plansza->kolumny; ++x){
+		wprintf(L"%lc", RAMKA_POZIOMA);
+	}
+
+	wprintf(L"%lc", ROG_GORA_PRAWO);
+	wprintf(L"%lc", '\n');
 
     for (int y = 0; y < plansza->wiersze; ++y) {
-        for (int x = 0; x < plansza->kolumny; ++x) {
+	    wprintf(L"%lc", RAMKA_PIONOWA);
 
+        for (int x = 0; x < plansza->kolumny + 1; ++x) {
             if(x == mrowka->x && y == mrowka->y){
-                wprintf(L"%lc ", mrowka->kierunek);
-            }else{
-                wprintf(L"%lc ", plansza->pola[x][y]);
+                wprintf(L"%lc", mrowka->kierunek);
+            }else if (x == plansza->kolumny){
+	    	wprintf(L"%lc", RAMKA_PIONOWA);
+	    }else{
+                wprintf(L"%lc", plansza->pola[x][y]);
             }
-
         }
         wprintf(L"%lc", '\n');
     }
 
+    wprintf(L"%lc", ROG_DOL_LEWO);
+    for (int x = 0; x < plansza->kolumny; ++x){
+                wprintf(L"%lc", RAMKA_POZIOMA);
+        }
+    wprintf(L"%lc", ROG_DOL_PRAWO);
     wprintf(L"%lc", '\n');
 }
 
