@@ -117,7 +117,7 @@ void wyswietl(struct plansza* plansza, struct mrowka* mrowka){
             }else if (x == plansza->kolumny){
 	    	wprintf(L"%lc", RAMKA_PIONOWA);
 	    }else{
-                wprintf(L"%lc", plansza->pola[x][y]);
+                wprintf(L"%lc", plansza->pola[y][x]);
             }
         }
         wprintf(L"%lc", '\n');
@@ -218,15 +218,19 @@ void zwolnij_plansze(struct plansza* plansza){
 }
 
 
-int main() {
+int main( int argc, char **argv) {
     setlocale(LC_CTYPE, "");
 
+    int m = argc > 1 ? atoi(argv[1]) : 10;
+    int n = argc > 2 ? atoi(argv[2]) : 10;
+    int it = argc > 3 ? atoi(argv[3]) : 5;
 
-    struct plansza* plansza = tworzenie_planszy(10,10);
-    struct mrowka* mrowka = tworzenie_morowki(5, 5, GORA);
+    
+    struct plansza* plansza = tworzenie_planszy(m,n);
+    struct mrowka* mrowka = tworzenie_morowki(m/2, n/2, GORA);
 
     wyswietl(plansza, mrowka);
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < it; ++i) {
         poruszanie(plansza, mrowka);
         wyswietl(plansza, mrowka);
     }
