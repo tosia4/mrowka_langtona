@@ -3,6 +3,9 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <locale.h>
+#include <time.h>
+#include <string.h>
+
 
 #define BIALY 0x25a1
 #define CZARNY 0x25a0
@@ -19,11 +22,8 @@
 #define ROG_DOL_LEWO 0x2517
 #define ROG_DOL_PRAWO 0x251b
 
-/*
- * zaczelam cos pisac, na razie wszystko w jednym pliku, najwyzej potem podzielimy
- *
- *
- */
+#define PRAWDA 1
+#define FALSZ 0
 
 struct plansza{
     int wiersze;
@@ -215,6 +215,37 @@ void zwolnij_plansze(struct plansza* plansza){
     }
     free(plansza->pola);
     free(plansza);
+}
+
+
+int czy_czarne_pole(struct plansza* plansza, int kolumna, int wiersz){
+    if(plansza->pola[wiersz][kolumna] == CZARNY){
+        return PRAWDA;
+    }else{
+        return FALSZ;
+    }
+}
+
+void losowanie_pol(struct plansza* plansza, int procent_zapelnienia){
+    srand(time(NULL));
+    int liczba_pol = plansza->wiersze*plansza->kolumny;
+
+    int liczba_czarnych_pol = (((float)procent_zapelnienia/100) * (float)liczba_pol);
+
+
+    for (int i = 0; i < liczba_czarnych_pol; ++i) {
+        int kolumna;
+        int wiersz;
+
+        do{
+            kolumna = rand()%plansza->kolumny;
+            wiersz = rand()%plansza->wiersze;
+        }while(czy_czarne_pole(plansza,kolumna, wiersz)==PRAWDA);
+
+        plansza->pola[wiersz][kolumna] = CZARNY;
+
+    }
+
 }
 
 
