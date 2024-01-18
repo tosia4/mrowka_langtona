@@ -5,6 +5,7 @@
 #include <locale.h>
 #include <time.h>
 #include <string.h>
+#include <getopt.h>
 
 
 #define BIALY 0x25a1
@@ -96,6 +97,123 @@ struct plansza* tworzenie_planszy(int wiersze, int kolumny){
 
     return nowa_plansza;
 
+}
+
+void zwolnij_plansze(struct plansza* plansza){
+    for (int i = 0; i < plansza->wiersze; ++i) {
+        free(plansza->pola[i]);
+    }
+    free(plansza->pola);
+    free(plansza);
+}
+
+
+struct plansza *wczytaj_plansze_z_pliku(const char *nazwa_pliku) {
+    FILE *plik = fopen(nazwa_pliku, "r");
+
+    if (plik == NULL) {
+        fprintf(stderr, "Nie można otworzyć pliku %s\n", nazwa_pliku);
+        return NULL;
+    }
+
+    int wiersze, kolumny;
+
+    if (fscanf(plik, "%d %d", &wiersze, &kolumny) != 2) {
+        fprintf(stderr, "Niepoprawny format pliku %s\n", nazwa_pliku);
+        fclose(plik);
+        return NULL;
+    }
+
+    struct plansza *wczytana_plansza = tworzenie_planszy(wiersze, kolumny);
+
+    if (wczytana_plansza == NULL) {
+        fprintf(stderr, "Błąd podczas alokacji pamięci dla planszy\n");
+        fclose(plik);
+        return NULL;
+    }
+
+    for (int i = 0; i < wiersze; ++i) {
+        for (int j = 0; j < kolumny; ++j) {
+	    wchar_t znak;
+            if (fscanf(plik, " %lc", &znak) != 1) {
+                fprintf(stderr, "Błąd podczas wczytywania planszy z pliku %s\n", nazwa_pliku);
+                zwolnij_plansze(wczytana_plansza);
+
+                fclose(plik);
+                return NULL;
+            }
+	    wczytana_plansza->pola[i][j] = znak;
+        }
+    }
+
+    fclose(plik);
+    return wczytana_plansza;
+}
+
+void czytanieargumentów(int argc, char **argv, int *m, int *n, int *it, char **plikdozapisu, char **czytaniepliku, int *kier, int *procent_zapelnienia)
+{
+    int opcja;
+
+    while ((opcja = getopt(argc, argv, "m:n:i:z:c:k:p:")) != -1)
+    {
+        switch (opcja)
+        {
+        case 'm':
+            if (atoi(optarg) <= 0)
+            {
+                fprintf(stderr, "Niepoprawna wartość argumentu %s\n", optarg);
+                exit(1);
+            }
+            *m = atoi(optarg);
+            break;
+        case 'n':
+            if (atoi(optarg) <= 0)
+            {
+                fprintf(stderr, "Niepoprawna wartość argumentu %s\n", optarg);
+                exit(1);
+            }
+            *n = atoi(optarg);
+            break;
+        case 'i':
+            if (atoi(optarg) <= 0)
+            {
+                fprintf(stderr, "Niepoprawna wartość argumentu %s\n", optarg);
+                exit(1);
+            }
+            *it = atoi(optarg);
+            break;
+        case 'p':
+            if (atoi(optarg) < 0 || atoi(optarg) > 100)
+            {
+                fprintf(stderr, "Niepoprawna wartość argumentu %s\n", optarg);
+                exit(1);
+            }
+            *procent_zapelnienia = atoi(optarg);
+            break;
+        case 'k':
+            if (atoi(optarg) < 0 || atoi(optarg) > 3)
+            {
+                fprintf(stderr, "Niepoprawna wartość argumentu %s\n", optarg);
+                exit(1);
+            }
+            *kier = atoi(optarg);
+            break;
+        case 'c':
+            *czytaniepliku = malloc(sizeof(char) * (strlen(optarg) + 1));
+            strcpy(*czytaniepliku, optarg);
+            break;
+        case 'z':
+            *plikdozapisu = malloc(sizeof(char) * (strlen(optarg) + 1));
+            strcpy(*plikdozapisu, optarg);
+            break;
+        case ':': /* brakuje argumentu związanego z opcją */
+            fprintf(stderr, "opcja -%c wymaga argumentu\n", optopt);
+            break;
+        case '?':
+            fprintf(stderr, "Niepoprawna opcja wywołania\n");
+            break;
+        }
+    }
 }
 
 void wyswietl(struct plansza* plansza, struct mrowka* mrowka){
@@ -209,15 +327,6 @@ void poruszanie(struct plansza* plansza, struct mrowka* mrowka){
 }
 
 
-void zwolnij_plansze(struct plansza* plansza){
-    for (int i = 0; i < plansza->wiersze; ++i) {
-        free(plansza->pola[i]);
-    }
-    free(plansza->pola);
-    free(plansza);
-}
-
-
 int czy_czarne_pole(struct plansza* plansza, int kolumna, int wiersz){
     if(plansza->pola[wiersz][kolumna] == CZARNY){
         return PRAWDA;
@@ -251,14 +360,46 @@ void losowanie_pol(struct plansza* plansza, int procent_zapelnienia){
 
 int main( int argc, char **argv) {
     setlocale(LC_CTYPE, "");
+    int m = 0, n = 0, it = 0, procent_zapelnienia = -1, kier = 0;
+    char *plikdozapisu = NULL;
+    char *czytaniepliku = NULL;
 
-    int m = argc > 1 ? atoi(argv[1]) : 10;
-    int n = argc > 2 ? atoi(argv[2]) : 10;
-    int it = argc > 3 ? atoi(argv[3]) : 5;
-
+    czytanieargumentów(argc, argv, &m, &n, &it, &plikdozapisu, &czytaniepliku, &kier, &procent_zapelnienia);
+    //fprintf(stderr, "m=%d, n=%d, i=%d, proc=%d\n, plik=%c", m, n, it, procent_zapelnienia, plikdozapisu);
     
-    struct plansza* plansza = tworzenie_planszy(m,n);
-    struct mrowka* mrowka = tworzenie_morowki(m/2, n/2, GORA);
+    struct plansza *plansza = NULL;
+
+    if (czytaniepliku != NULL) {
+        plansza = wczytaj_plansze_z_pliku(czytaniepliku);
+
+        if (plansza == NULL) {
+            fprintf(stderr, "Błąd podczas wczytywania planszy z pliku\n");
+            free(plikdozapisu);
+            free(czytaniepliku);
+            return 1;
+        }
+    } else {
+        // W przeciwnym razie utwórz nową planszę
+        plansza = tworzenie_planszy(m, n);
+
+        if (plansza == NULL) {
+            fprintf(stderr, "Błąd podczas tworzenia planszy\n");
+            free(plikdozapisu);
+            free(czytaniepliku);
+            return 1;
+        }
+
+        // Jeśli procent_zapelnienia >= 0, losuj pola
+        if (procent_zapelnienia >= 0) {
+            losowanie_pol(plansza, procent_zapelnienia);
+        }
+    }
+
+    struct mrowka* mrowka;
+    if(kier==0)mrowka = tworzenie_morowki(m/2, n/2, GORA);
+    else if(kier==1)mrowka = tworzenie_morowki(m/2, n/2, DOL);
+    else if(kier==2)mrowka = tworzenie_morowki(m/2, n/2, LEWO);
+    else if(kier==3)mrowka = tworzenie_morowki(m/2, n/2, PRAWO);
 
     wyswietl(plansza, mrowka);
     for (int i = 0; i < it; ++i) {
@@ -266,7 +407,8 @@ int main( int argc, char **argv) {
         wyswietl(plansza, mrowka);
     }
 
-
+    free(plikdozapisu);
+    free(czytaniepliku);
     zwolnij_plansze(plansza);
     return 0;
 }
