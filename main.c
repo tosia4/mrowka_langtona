@@ -358,6 +358,44 @@ void losowanie_pol(struct plansza* plansza, int procent_zapelnienia){
 }
 
 
+
+void zapis_do_pliku(char* nazwa_pliku, struct plansza* plansza, struct mrowka* mrowka){
+
+    FILE* plik;
+    plik = fopen(nazwa_pliku,"w");
+
+    fputwc(ROG_GORA_LEWO, plik);
+    for (int x = 0; x < plansza->kolumny; ++x){
+        fputwc(RAMKA_POZIOMA, plik);
+    }
+
+    fputwc(ROG_GORA_PRAWO, plik);
+    fputwc(L'\n', plik);
+
+    for (int y = 0; y < plansza->wiersze; ++y) {
+        fputwc(RAMKA_PIONOWA, plik);
+
+        for (int x = 0; x < plansza->kolumny + 1; ++x) {
+            if(x == mrowka->x && y == mrowka->y){
+                fputwc(mrowka->kierunek, plik);
+            }else if (x == plansza->kolumny){
+                fputwc(RAMKA_PIONOWA, plik);
+            }else{
+                fputwc(plansza->pola[y][x], plik);
+            }
+        }
+        fputwc(L'\n', plik);
+    }
+
+    fputwc(ROG_DOL_LEWO, plik);
+    for (int x = 0; x < plansza->kolumny; ++x){
+        fputwc(RAMKA_POZIOMA,plik);
+    }
+    fputwc(ROG_DOL_PRAWO, plik);
+    fputwc(L'\n', plik);
+}
+
+
 int main( int argc, char **argv) {
     setlocale(LC_CTYPE, "");
     int m = 0, n = 0, it = 0, procent_zapelnienia = -1, kier = 0;
@@ -401,10 +439,24 @@ int main( int argc, char **argv) {
     else if(kier==2)mrowka = tworzenie_morowki(m/2, n/2, LEWO);
     else if(kier==3)mrowka = tworzenie_morowki(m/2, n/2, PRAWO);
 
+    char numer_iteracji[4];
+
     wyswietl(plansza, mrowka);
+    
     for (int i = 0; i < it; ++i) {
-        poruszanie(plansza, mrowka);
-        wyswietl(plansza, mrowka);
+        sprintf(numer_iteracji, "%d", i); //zapisujemy nr iteracji jako string
+	poruszanie(plansza, mrowka);
+
+	//if(){
+		wyswietl(plansza, mrowka);
+	//} else {
+		char filename[100]; //miejsce na nazwe pliku
+        	memset(filename, 0, 100); //czyscimy pamiec
+        	strcat(filename,"file_"); //sklejamy nazwe
+        	strcat(filename, numer_iteracji); //sklejamy nazwe
+        	zapis_do_pliku(filename, plansza, mrowka);
+	//}
+        
     }
 
     free(plikdozapisu);
