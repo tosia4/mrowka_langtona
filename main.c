@@ -118,11 +118,15 @@ struct plansza *wczytaj_plansze_z_pliku(const char *nazwa_pliku) {
 
     int wiersze, kolumny;
 
+    // Wczytanie rozmiarów planszy
     if (fscanf(plik, "%d %d", &wiersze, &kolumny) != 2) {
         fprintf(stderr, "Niepoprawny format pliku %s\n", nazwa_pliku);
         fclose(plik);
         return NULL;
     }
+
+    // Pominięcie znaku nowej linii po rozmiarach
+    fgetc(plik);
 
     struct plansza *wczytana_plansza = tworzenie_planszy(wiersze, kolumny);
 
@@ -133,22 +137,42 @@ struct plansza *wczytaj_plansze_z_pliku(const char *nazwa_pliku) {
     }
 
     for (int i = 0; i < wiersze; ++i) {
+        // Pominięcie znaku ramki na początku wiersza
+        fgetwc(plik);
+
         for (int j = 0; j < kolumny; ++j) {
-	    wchar_t znak;
+            wchar_t znak;
+            
+            // Wczytanie znaku
             if (fscanf(plik, " %lc", &znak) != 1) {
                 fprintf(stderr, "Błąd podczas wczytywania planszy z pliku %s\n", nazwa_pliku);
                 zwolnij_plansze(wczytana_plansza);
-
                 fclose(plik);
                 return NULL;
             }
-	    wczytana_plansza->pola[i][j] = znak;
+
+            // Pominięcie znaków obramowania
+            if (znak != L'┏' && znak != L'┓' && znak != L'┗' && znak != L'┛' &&
+                znak != L'┃' && znak != L'━' && znak != L'┃' && znak != L'━') {
+                wczytana_plansza->pola[i][j] = znak;
+            } else {
+                --j; // Ponowna iteracja dla pominięcia znaku obramowania
+            }
         }
+
+        // Pominięcie znaku ramki na końcu wiersza
+        fgetwc(plik);
     }
+
+    // Pominięcie znaku dolnego obramowania ramki po wczytaniu planszy
+    fgetwc(plik);
 
     fclose(plik);
     return wczytana_plansza;
 }
+
+
+
 
 void czytanieargumentów(int argc, char **argv, int *m, int *n, int *it, char **plikdozapisu, char **czytaniepliku, int *kier, int *procent_zapelnienia)
 {
@@ -398,6 +422,7 @@ void zapis_do_pliku(char* nazwa_pliku, struct plansza* plansza, struct mrowka* m
 
 int main( int argc, char **argv) {
     setlocale(LC_CTYPE, "");
+    //setlocale(LC_ALL, "");
     int m = 0, n = 0, it = 0, procent_zapelnienia = -1, kier = 0;
     char *plikdozapisu = NULL;
     char *czytaniepliku = NULL;
@@ -447,16 +472,15 @@ int main( int argc, char **argv) {
         sprintf(numer_iteracji, "%d", i); //zapisujemy nr iteracji jako string
 	poruszanie(plansza, mrowka);
 
-	
-	wyswietl(plansza, mrowka);
-	
-	char filename[100]; //miejsce na nazwe pliku
-        memset(filename, 0, 100); //czyscimy pamiec
-        strcat(filename, plikdozapisu); //sklejamy nazwe
-	strcat(filename, "_");
-        strcat(filename, numer_iteracji); //sklejamy nazwe
-	strcat(filename, ".txt");
-        zapis_do_pliku(filename, plansza, mrowka);
+	//if(){
+		wyswietl(plansza, mrowka);
+	//} else {
+		char filename[100]; //miejsce na nazwe pliku
+        	memset(filename, 0, 100); //czyscimy pamiec
+        	strcat(filename,"file_"); //sklejamy nazwe
+        	strcat(filename, numer_iteracji); //sklejamy nazwe
+        	zapis_do_pliku(filename, plansza, mrowka);
+	//}
         
     }
 
