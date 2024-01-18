@@ -301,7 +301,7 @@ void poruszanie_biale(struct plansza* plansza, struct mrowka* mrowka){
 
     mrowka->kierunek = obrot_prawo(mrowka->kierunek);
 
-    plansza->pola[mrowka->x][mrowka->y] = odwrocenie_koloru(plansza->pola[mrowka->x][mrowka->y]);
+    plansza->pola[mrowka->y][mrowka->x] = odwrocenie_koloru(plansza->pola[mrowka->y][mrowka->x]);
 
     przesuniecie_mrowki(mrowka);
 
@@ -311,7 +311,7 @@ void poruszanie_czarne(struct plansza* plansza, struct mrowka* mrowka){
 
     mrowka->kierunek = obrot_lewo(mrowka->kierunek);
 
-    plansza->pola[mrowka->x][mrowka->y] = odwrocenie_koloru(plansza->pola[mrowka->x][mrowka->y]);
+    plansza->pola[mrowka->y][mrowka->x] = odwrocenie_koloru(plansza->pola[mrowka->y][mrowka->x]);
 
     przesuniecie_mrowki(mrowka);
 
@@ -319,7 +319,7 @@ void poruszanie_czarne(struct plansza* plansza, struct mrowka* mrowka){
 
 void poruszanie(struct plansza* plansza, struct mrowka* mrowka){
 
-    if (plansza->pola[mrowka->x][mrowka->y] == BIALY){
+    if (plansza->pola[mrowka->y][mrowka->x] == BIALY){
         poruszanie_biale(plansza,mrowka);
     }else{
         poruszanie_czarne(plansza,mrowka);
