@@ -348,6 +348,10 @@ void poruszanie(struct plansza* plansza, struct mrowka* mrowka){
     }else{
         poruszanie_czarne(plansza,mrowka);
     }
+    if (mrowka->x < 0 || mrowka->x >= plansza->kolumny || mrowka->y < 0 || mrowka->y >= plansza->wiersze) {
+        fprintf(stderr, "Mrówka opuściła planszę! Koniec programu.\n");
+        exit(1);
+    }
 }
 
 
@@ -481,6 +485,11 @@ int main( int argc, char **argv) {
         strcat(filename, numer_iteracji); //sklejamy nazwe
 	strcat(filename, ".txt");
         zapis_do_pliku(filename, plansza, mrowka);
+	
+	if (mrowka->x < 0 || mrowka->x >= plansza->kolumny || mrowka->y < 0 || mrowka->y >= plansza->wiersze) {
+            fprintf(stderr, "Mrówka opuściła planszę! Koniec programu.\n");
+            break; // Przerwij pętlę, gdy mrówka opuści planszę
+        }
         
     }
 
