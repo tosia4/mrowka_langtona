@@ -471,16 +471,16 @@ int main( int argc, char **argv) {
     for (int i = 0; i < it; ++i) {
         sprintf(numer_iteracji, "%d", i); //zapisujemy nr iteracji jako string
 	poruszanie(plansza, mrowka);
+        
+	wyswietl(plansza, mrowka);
 
-	//if(){
-		wyswietl(plansza, mrowka);
-	//} else {
-		char filename[100]; //miejsce na nazwe pliku
-        	memset(filename, 0, 100); //czyscimy pamiec
-        	strcat(filename,"file_"); //sklejamy nazwe
-        	strcat(filename, numer_iteracji); //sklejamy nazwe
-        	zapis_do_pliku(filename, plansza, mrowka);
-	//}
+	char filename[100]; //miejsce na nazwe pliku
+        memset(filename, 0, 100); //czyscimy pamiec
+        strcat(filename, plikdozapisu); //sklejamy nazwe
+	strcat(filename, "_");
+        strcat(filename, numer_iteracji); //sklejamy nazwe
+	strcat(filename, ".txt");
+        zapis_do_pliku(filename, plansza, mrowka);
         
     }
 
